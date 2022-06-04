@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html>
+<!--▼head▼-->
+
+<head>
+    <meta charset="UTF-8">
+    <title>CALENDAR</title>
+    <script>
+        (function (d) {
+            var config = {
+                kitId: 'mrs7nsi',
+                scriptTimeout: 3000,
+                async: true
+            },
+                h = d.documentElement, t = setTimeout(function () { h.className = h.className.replace(/\bwf-loading\b/g, "") + " wf-inactive"; }, config.scriptTimeout), tk = d.createElement("script"), f = false, s = d.getElementsByTagName("script")[0], a; h.className += " wf-loading"; tk.src = 'https://use.typekit.net/' + config.kitId + '.js'; tk.async = true; tk.onload = tk.onreadystatechange = function () { a = this.readyState; if (f || a && a != "complete" && a != "loaded") return; f = true; clearTimeout(t); try { Typekit.load(config) } catch (e) { } }; s.parentNode.insertBefore(tk, s)
+        })(document);
+    </script>
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <!-- HTMLはここに -->
+    <!--▼header▼-->
+    <header>
+        <h1 id=title>CALENDAR APP</h1>
+    </header>
+    <!--▼main▼-->
+    <main>
+        <div class="all">
+            <div class="sideMenu">
+                <div class="menu">
+                    <h1>MENU</h1>
+                    <ul id="menuAll">
+                        <li id="pageMenu"><a href="home.html">HOME</a></li>
+                        <li id="pageMenu"><a href="rom.html">FRIEND</a></li>
+                        <li id="pageMenu"><a href="setting.html">SETTING</a></li>
+                    </ul>
+                    <button id="logOut">ログアウト</button>
+                </div>
+            </div>
+            <div class="contents">
+                <div class="mainContents">
+                    <h1>MY SCHEDULE</h1>
+                    <h2 id="YearMonth">2022.01</h2>
+                    <div id="changeButton">
+                        <button id="prev">＜</button>
+                        <button id="next">＞</button>
+                    </div>
+                    <div id="calendar">
+
+                    </div>
+                </div>
+                <div class="rightContents">
+                    <h2 id="contentDate"></h2>
+                    <div class="thisPlans">
+                    </div>
+                    <label>
+                        <button id="addSchedule">追加</button>
+                        <div id="plan">
+                            <input id="planTitle" type="text" placeholder="タイトル">
+                            <button id="closePlan">×</button>
+                            <br>
+                            <div id="selectColors">
+                                <span for="selectColors">ラベルカラー</span>
+                                <div id="selectColor">
+                                    <input id="red" name="selectColor" type="radio" value="red">
+                                    <label for="red" name="selectColor">RED</label>
+                                    <input id="orange" name="selectColor" type="radio" value="orange">
+                                    <label for="orange" name="selectColor">ORANGE</label>
+                                    <input id="yellow" name="selectColor" type="radio" value="yellow">
+                                    <label for="yellow" name="selectColor">YELLOW</label>
+                                    <input id="green" name="selectColor" type="radio" value="green">
+                                    <label for="green" name="selectColor">GREEN</label>
+                                    <input id="blue" name="selectColor" type="radio" value="blue">
+                                    <label for="blue" name="selectColor">BLUE</label>
+                                    <input id="purple" name="selectColor" type="radio" value="purple">
+                                    <label for="purple" name="selectColor">PURPLE</label>
+                                </div>
+                                <br>
+                            </div>
+                            <button id="goPlan">保存</button>
+                            <button id="deletePlan">削除</button>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!--▼footer▼-->
+    <footer>
+        <h3 id="copyright">©2022 MOMOKAWA NIDA</h3>
+    </footer>
+
+    <!--▼JS▼-->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC7heMCJP3vzU7dmURDo8LdQ24d9ohORFQ",
+            authDomain: "schedule-planning.firebaseapp.com",
+            databaseURL: "https://schedule-planning-default-rtdb.firebaseio.com",
+            projectId: "schedule-planning",
+            storageBucket: "schedule-planning.appspot.com",
+            messagingSenderId: "545354919287",
+            appId: "1:545354919287:web:5fd6820061928fa9974572"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+    </script>
+
+    <!-- jQueryのコードを書くscriptタグより前でjQueryを読み込む -->
+    <script src="https://code.jquery.com/jquery-3.6.0.js"
+        integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+    <script type="module">
+        // Strictモード
+        "use strict";
+
+        // JavaScriptはここに
+        let storage = localStorage;
+        import { getDatabase, ref, update, onValue, set, get } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+        let database = getDatabase();
+        let userId = storage["myId"];
+        let myDatabase = ref(database, "users/" + userId + "/");
+        let myData;
+        let date;
+        let selectDate;
+        let selectMonth;
+        let selectYear;
+        let now = new Date();
+        let todayDate;
+        let aa = [];
+        let thisYear = now.getFullYear();   // 年
+        let thisMonth = now.getMonth();     // 月（0-11）
+        let thisDate = now.getDate();       // 日
+        let thisDay = now.getDay() + 1;         // 曜日（0-6）
+        let getThisMonth = new Date(thisYear, thisMonth, 1);
+        const dayOfTheWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+        function createCalendar(date) {
+            let thisYear = date.getFullYear();   // 年
+            let thisMonth = date.getMonth();     // 月（0-11）
+            let tr = calendar(thisYear, thisMonth);
+            $("#calendar").html(tr);
+            selectYear = thisYear;
+            selectMonth = thisMonth;
+            storage["selectYear"] = thisYear;
+            storage["selectMonth"] = thisMonth;
+            thisMonth += 1;
+            $("#YearMonth").html(thisYear + "/" + thisMonth);
+            $("#" + todayDate).css("font-weight", "bold");
+            if (todayDate == 1 || todayDate == 11 || todayDate == 21 || todayDate == 31) {
+                $("#contentDate").html(todayDate + "ST'S PLANS");
+            } else if (todayDate == 2 || todayDate == 12 || todayDate == 22) {
+                $("#contentDate").html(todayDate + "ND'S PLANS");
+            } else if (todayDate == 3 || todayDate == 13 || todayDate == 23) {
+                $("#contentDate").html(todayDate + "RD'S PLANS");
+            } else {
+                $("#contentDate").html(todayDate + "TH'S PLANS");
+            }
+            selectDate = todayDate;
+        }
+        function calendar(thisYear, thisMonth) {
+            let tr = "<table><tr class='DotW'>"
+            let getThisMonth = new Date(thisYear, thisMonth, 1);
+            let dayNum = 0;
+            let startDayOfWeek = getThisMonth.getDay();
+            let endDate = new Date(thisYear, thisMonth + 1, 0).getDate();
+            let lastMonthEndDate = new Date(thisYear, thisMonth, 0).getDate();
+            let weekNum = Math.ceil((startDayOfWeek + endDate) / 7);
+            for (var i = 1; i < dayOfTheWeek.length; i++) {
+                tr += "<th>" + dayOfTheWeek[i] + "</th>";
+            }
+            tr += "</tr>";
+            for (let i = 0; i < weekNum; i++) {
+                tr += "<tr>";
+                for (let j = 1; j < dayOfTheWeek.length; j++) {
+                    if (i == 0 && j < startDayOfWeek) {
+                        tr += "<td class='notThisMonth'><p id='" + dayNum + "'>"
+                            + (lastMonthEndDate - startDayOfWeek + j + 1) + "</p></td>";
+                    } else if (dayNum >= endDate) {
+                        dayNum++;
+                        tr += "<td class='notThisMonth'><p id='" + dayNum + "'>" + (dayNum - endDate) + "</p>";
+                        tr += "</td>";
+                    } else {
+                        dayNum++;
+                        if (thisYear == now.getFullYear()
+                            && thisMonth == (now.getMonth())
+                            && dayNum == now.getDate()) {
+                            tr += "<td class='today " + dayNum + "''><p id='" + dayNum + "'>" + dayNum + "</p>";
+                            tr += "</td>";
+                            todayDate = dayNum;
+                        } else {
+                            tr += "<td class='" + dayNum + "''><p id='" + dayNum + "'>" + dayNum + "</p>";
+                            onValue(ref((database), "users/" + userId + "/" + thisYear + "/" + thisMonth + "/" + dayNum), (snapshot) => {
+                                let theDaysPlan = snapshot.val();
+
+                                if (theDaysPlan != null) {
+                                    let thisPlansTitle = Object.keys(theDaysPlan);
+                                    let thePlanNum = thisPlansTitle.length;
+                                    for (let i = 0; i < thePlanNum; i++) {
+                                        console.log(thisPlansTitle[i]);
+                                        let thisPlanTitle = thisPlansTitle[i];
+                                        let thisPlanColor = theDaysPlan[thisPlanTitle].plan_color;
+                                        aa[theDaysPlan[thisPlanTitle].select_date] = "<h6 id='" + thisPlanColor + "Plan'></h6>";
+                                        console.log(aa);
+                                    }
+                                }
+                            });
+                            tr += "</td>";
+                        }
+                    }
+                }
+                tr += "</tr>";
+            }
+            return tr;
+        }
+
+        window.onload = function () {
+            createCalendar(now, calendar);
+            storage["red"] = JSON.stringify({ colorCode: "#d3381c", colorName: $("#red").text() });
+            storage["orange"] = JSON.stringify({ colorCode: "#f39800", colorName: $("#orange").text() });
+            storage["yellow"] = JSON.stringify({ colorCode: "#fcc800", colorName: $("#yellow").text() });
+            storage["green"] = JSON.stringify({ colorCode: "#007b43", colorName: $("#green").text() });
+            storage["blue"] = JSON.stringify({ colorCode: "#0094c8", colorName: $("#blue").text() });
+            storage["purple"] = JSON.stringify({ colorCode: "#b6007a", colorName: $("#purple").text() });
+            onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth + "/" + selectDate), (snapshot) => {
+                let theDaysPlan = snapshot.val()
+                if (theDaysPlan != null) {
+                    if (selectDate != todayDate) {
+                        $("." + selectDate).html("<p id='" + selectDate + "'>" + selectDate + "</p>");
+                    } else {
+                        $("." + selectDate).html("<p id='" + selectDate + "'>" + selectDate + "</p>");
+                    }
+                    $(".thisPlans").html("");
+                    let thisPlansTitle = Object.keys(theDaysPlan);
+                    let thePlanNum = thisPlansTitle.length;
+                    for (let i = 0; i < thePlanNum; i++) {
+                        onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth + "/" + selectDate + "/" + thisPlansTitle[i]), (snapshot) => {
+                            let thisPlanTitle = snapshot.val();
+                            console.log(thisPlanTitle);
+                            let thisPlanColor = thisPlanTitle.plan_color;
+                            $(".thisPlans").append("<div id='pieceOfPlan'><h4 id='" + thisPlanColor + "Plan'>" + thisPlansTitle[i] + "</h4></div>");
+                        });
+                    }
+                }
+            });
+            onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth), (snapshot) => {
+                let theMonthsPlan = snapshot.val();
+                console.log();
+                for (let i = 1; i < 32; i++) {
+                    let aa = [];
+                    aa[i] = theMonthsPlan[i];
+                    console.log(aa[i]);
+                    onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth + "/" + i), (snapshot) => {
+                        let theDaysPlan = snapshot.val();
+                        if (theDaysPlan != null) {
+                            if (i != todayDate) {
+                                $("." + i).html("<p id='" + i + "'>" + i + "</p>");
+                            } else {
+                                $("." + i).html("<p id='" + i + "'>" + i + "</p>");
+                            }
+                            let thisPlansTitle = Object.keys(theDaysPlan);
+                            let thePlanNum = thisPlansTitle.length;
+                            for (let j = 0; j < thePlanNum; j++) {
+                                onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth + "/" + i + "/" + thisPlansTitle[j]), (snapshot) => {
+                                    let thisPlanTitle = snapshot.val();
+                                    console.log(thisPlanTitle);
+                                    let thisPlanColor = thisPlanTitle.plan_color;
+                                    $("." + i).append("<h5 id='" + thisPlanColor + "Plan'></h5>");
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+        };
+
+        if (userId == undefined) {
+            if (!alert("自動的にログアウトされました。ログイン画面に戻ります")) {
+                window.location.href = "/index.html";
+            }
+        }
+
+        $("#prev").on("click", function () {
+            getThisMonth.setMonth(getThisMonth.getMonth() - 1);
+            createCalendar(getThisMonth);
+            onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth), (snapshot) => {
+                let theMonthsPlan = snapshot.val();
+                console.log();
+                for (let i = 1; i < 32; i++) {
+                    let aa = [];
+                    aa[i] = theMonthsPlan[i];
+                    console.log(aa[i]);
+                    onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth + "/" + i), (snapshot) => {
+                        let theDaysPlan = snapshot.val();
+                        if (theDaysPlan != null) {
+                            $("." + i).html("<p id='" + i + "'>" + i + "</p>");
+                            let thisPlansTitle = Object.keys(theDaysPlan);
+                            let thePlanNum = thisPlansTitle.length;
+                            for (let j = 0; j < thePlanNum; j++) {
+                                onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth + "/" + i + "/" + thisPlansTitle[j]), (snapshot) => {
+                                    let thisPlanTitle = snapshot.val();
+                                    console.log(thisPlanTitle);
+                                    let thisPlanColor = thisPlanTitle.plan_color;
+                                    $("." + i).append("<h5 id='" + thisPlanColor + "Plan'></h5>");
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        $("#next").on("click", function () {
+            getThisMonth.setMonth(getThisMonth.getMonth() + 1);
+            createCalendar(getThisMonth);
+            onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth), (snapshot) => {
+                let theMonthsPlan = snapshot.val();
+                console.log();
+                for (let i = 1; i < 32; i++) {
+                    let aa = [];
+                    aa[i] = theMonthsPlan[i];
+                    console.log(aa[i]);
+                    onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth + "/" + i), (snapshot) => {
+                        let theDaysPlan = snapshot.val();
+                        if (theDaysPlan != null) {
+                            $("." + i).html("<p id='" + i + "'>" + i + "</p>");
+                            let thisPlansTitle = Object.keys(theDaysPlan);
+                            let thePlanNum = thisPlansTitle.length;
+                            for (let j = 0; j < thePlanNum; j++) {
+                                onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth + "/" + i + "/" + thisPlansTitle[j]), (snapshot) => {
+                                    let thisPlanTitle = snapshot.val();
+                                    console.log(thisPlanTitle);
+                                    let thisPlanColor = thisPlanTitle.plan_color;
+                                    $("." + i).append("<h5 id='" + thisPlanColor + "Plan'></h5>");
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        $("#calendar").on("click", "td", function () {
+            let val = $(this).attr("class");
+            selectDate = $(this).text();
+            console.log(selectDate);
+            $(".thisPlans").html("");
+            if (val != "notThisMonth") {
+                for (let i = 1; i <= 31; i++) {
+                    $("#" + i).css("font-weight", "100");
+                    $("." + i).css("background", "#323639");
+                }
+                if (thisYear == storage["selectYear"] && thisMonth == storage["selectMonth"]) {
+                    $("#" + todayDate).css("font-weight", "bold");
+                    $("#" + todayDate).css("background", "#555");
+                }
+                $("#" + selectDate).css("font-weight", "bold");
+                $("." + selectDate).css("background", "#555");
+                if (selectDate == 1 || selectDate == 11 || selectDate == 21 || selectDate == 31) {
+                    $("#contentDate").html(selectDate + "ST'S PLANS");
+                } else if (selectDate == 2 || selectDate == 12 || selectDate == 22) {
+                    $("#contentDate").html(selectDate + "ND'S PLANS");
+                } else if (selectDate == 3 || selectDate == 13 || selectDate == 23) {
+                    $("#contentDate").html(selectDate + "RD'S PLANS");
+                } else {
+                    $("#contentDate").html(selectDate + "TH'S PLANS");
+                }
+            }
+            onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth + "/" + selectDate), (snapshot) => {
+                let theDaysPlan = snapshot.val()
+                if (theDaysPlan != null) {
+                    $(".thisPlans").html("");
+                    let thisPlansTitle = Object.keys(theDaysPlan);
+                    let thePlanNum = thisPlansTitle.length;
+                    for (let i = 0; i < thePlanNum; i++) {
+                        onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth + "/" + selectDate + "/" + thisPlansTitle[i]), (snapshot) => {
+                            let thisPlanTitle = snapshot.val();
+                            console.log(thisPlanTitle);
+                            let thisPlanColor = thisPlanTitle.plan_color;
+                            $(".thisPlans").append("<div id='pieceOfPlan'><h4 id='" + thisPlanColor + "Plan'>" + thisPlansTitle[i] + "</h4></div>");
+                        });
+                    }
+                }
+            });
+        });
+
+        $("#addSchedule").on("click", function () {
+            storage["selectDate"] = selectDate;
+            $("#plan").css("display", "block");
+            $("#calendar").css("pointer-events", "none");
+        });
+
+        $("#closePlan").on("click", function () {
+            $("#plan").css("display", "none");
+            $("#calendar").css("pointer-events", "auto");
+            $("#deletePlan").css("display", "none");
+            $("#planTitle").val("");
+        });
+
+        $("#selectColor").on("click", function () {
+            //select-->valで管理
+
+        });
+
+        $("#goPlan").on("click", function () {
+            let flag = true;
+            if ($("#planTitle").val() == "") {
+                flag = false;
+                alert("タイトルを選択してください");
+            } else if ($("input[name=selectColor]:checked").val() == undefined) {
+                flag = false;
+                alert("ラベルカラーを選択してください");
+            }
+            if (flag) {
+                $("#plan").css("display", "none");
+                $("#calendar").css("pointer-events", "auto");
+                let newPlanDate = selectYear + "/" + selectMonth + "/" + selectDate;
+                let plan = {};
+                plan[$("#planTitle").val()] = {
+                    select_year: selectYear,
+                    select_month: selectMonth,
+                    select_date: selectDate,
+                    plan_color: $("input[name=selectColor]:checked").val()
+                };
+                console.log(plan);
+                $(".thisPlans").html("");
+                $(".thisPlans").html("<div id='pieceOfPlan'><h4 id='" + $("input[name=selectColor]:checked").val() + "Plan'>" + $("#planTitle").val() + "</h4></div>");
+                update(ref(database, "users/" + userId + "/" + newPlanDate), plan);
+                $("#planTitle").val("");
+            }
+        });
+
+        $("#deletePlan").on("click", function () {
+            let deleteCheck = window.confirm("本当に削除しますか？");
+            if (deleteCheck) {
+                let key = $("#planTitle").val();
+                let post = {};
+                post[key] = null;
+                update(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth + "/" + selectDate), post);
+                onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth + "/" + selectDate), (snapshot) => {
+                let theDaysPlan = snapshot.val();
+                if(theDaysPlan==null){
+                    $(".thisPlans").html("");
+                    $("."+selectDate).html("<p id='"+selectDate+"'>"+selectDate+"</p>")
+                }
+            });
+                $("#planTitle").val("");
+                $("#plan").css("display", "none");
+                $("#deletePlan").css("display", "none");
+                $("#calendar").css("pointer-events", "auto");
+            }
+        });
+
+        $(document).on("click", "#pieceOfPlan", function () {
+            let planName = $(this).text();
+            $("#planTitle").val(planName);
+            onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth + "/" + selectDate), (snapshot) => {
+                let theDaysPlan = snapshot.val();
+                let thisPlanColor = theDaysPlan[planName].plan_color;
+                console.log(thisPlanColor);
+                $("input[value='" + thisPlanColor + "']").prop("checked", true);
+            });
+            $("#plan").css("display", "block");
+            $("#deletePlan").css("display", "inline-block");
+            $("#calendar").css("pointer-events", "none");
+        });
+
+        onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth), (snapshot) => {
+            let theMonthsPlan = snapshot.val();
+            console.log();
+            for (let i = 1; i < 32; i++) {
+                let aa = [];
+                aa[i] = theMonthsPlan[i];
+                console.log(aa[i]);
+                onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth + "/" + i), (snapshot) => {
+                    let theDaysPlan = snapshot.val();
+                    if (theDaysPlan != null) {
+                        $("." + i).html("<p id='" + i + "'>" + i + "</p>");
+                        let thisPlansTitle = Object.keys(theDaysPlan);
+                        let thePlanNum = thisPlansTitle.length;
+                        for (let j = 0; j < thePlanNum; j++) {
+                            onValue(ref((database), "users/" + userId + "/" + selectYear + "/" + selectMonth + "/" + i + "/" + thisPlansTitle[j]), (snapshot) => {
+                                let thisPlanTitle = snapshot.val();
+                                console.log(thisPlanTitle);
+                                let thisPlanColor = thisPlanTitle.plan_color;
+                                $("." + i).append("<h5 id='" + thisPlanColor + "Plan'></h5>");
+                            });
+                        }
+                    }else{
+                        $("." + i).html("<p id='" + i + "'>" + i + "</p>");
+                    }
+                });
+            }
+        });
+
+
+        $("#logOut").on("click", function () {
+            storage["myId"] = undefined;
+            storage["myPass"] = undefined;
+            window.location.href = "/index.html";
+        });
+
+        onValue(myDatabase, (snapshot) => {
+            const myData = snapshot.val();
+            console.log(myData);
+            let redVal = myData.red_name;
+            $("label[for='red']").text(redVal);
+            let orangeVal = myData.orange_name;
+            $("label[for='orange']").text(orangeVal);
+            let yellowVal = myData.yellow_name;
+            $("label[for='yellow']").text(yellowVal);
+            let greenVal = myData.green_name;
+            $("label[for='green']").text(greenVal);
+            let blueVal = myData.blue_name;
+            $("label[for='blue']").text(blueVal);
+            let purpleVal = myData.purple_name;
+            $("label[for='purple']").text(purpleVal);
+        });
+
+    </script>
+</body>
+
+</html>

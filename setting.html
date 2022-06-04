@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>CALENDAR</title>
+    <script>
+        (function (d) {
+            var config = {
+                kitId: 'mrs7nsi',
+                scriptTimeout: 3000,
+                async: true
+            },
+                h = d.documentElement, t = setTimeout(function () { h.className = h.className.replace(/\bwf-loading\b/g, "") + " wf-inactive"; }, config.scriptTimeout), tk = d.createElement("script"), f = false, s = d.getElementsByTagName("script")[0], a; h.className += " wf-loading"; tk.src = 'https://use.typekit.net/' + config.kitId + '.js'; tk.async = true; tk.onload = tk.onreadystatechange = function () { a = this.readyState; if (f || a && a != "complete" && a != "loaded") return; f = true; clearTimeout(t); try { Typekit.load(config) } catch (e) { } }; s.parentNode.insertBefore(tk, s)
+        })(document);
+    </script>
+    <link rel="stylesheet" href="style.css">
+    </style>
+</head>
+
+<body>
+
+    <!-- HTMLはここに -->
+    <!--▼header▼-->
+    <header>
+        <h1 id=title>CALENDAR APP</h1>
+    </header>
+    <!--▼main▼-->
+    <main>
+        <div class="all">
+            <div class="sideMenu">
+                <div class="menu">
+                    <h1>MENU</h1>
+                    <ul id="menuAll">
+                        <li id="pageMenu"><a href="home.html">HOME</a></li>
+                        <li id="pageMenu"><a href="rom.html">FRIEND</a></li>
+                        <li id="pageMenu"><a href="setting.html">SETTING</a></li>
+                    </ul>
+                    <button id="logOut">ログアウト</button>
+                </div>
+            </div>
+            <div class="contents">
+                <div class="mainContents">
+                    <h1>SETTING</h1>
+
+                    <h3 id="colorTitle">ラベル名変更</h3>
+                    <div id="changePlanColors">
+                        <div id="redSample" style="border-left: solid 6px #d3381c; padding: 4px;">
+                            <input id="redName" type="text" placeholder="RED">
+                        </div>
+                        <br>
+                        <div id="orangeSample" style="border-left: solid 6px #f39800; padding: 4px;">
+                            <input id="orangeName" type="text" placeholder="ORANGE">
+                        </div>
+                        <br>
+                        <div id="yellowSample" style="border-left: solid 6px #fcc800; padding: 4px;">
+                            <input id="yellowName" type="text" placeholder="YELLOW">
+                        </div>
+                        <br>
+                        <div id="greenSample" style="border-left: solid 6px #007b43; padding: 4px;">
+                            <input id="greenName" type="text" placeholder="GREEN">
+                        </div>
+                        <br>
+                        <div id="blueSample" style="border-left: solid 6px #0094c8; padding: 4px;">
+                            <input id="blueName" type="text" placeholder="BLUE">
+                        </div>
+                        <br>
+                        <div id="purpleSample" style="border-left: solid 6px #b6007a; padding: 4px;">
+                            <input id="purpleName" type="text" placeholder="PURPLE">
+                        </div>
+                        <br>
+                        <button id="saveColor">保存</button>
+                        <button id="closeColor">閉じる</button>
+                    </div>
+
+                    <h3 id="profileTitle">プロフィール編集</h3>
+                    <div id="changeProfile">
+                        <span>ユーザーネーム</span>
+                        <input id="changeName" type="text" placeholder="">
+                        <br>
+                        <span>ユーザーパスワード</span>
+                        <input id="changePass" type="text" placeholder="">
+                        <br>
+                        <button id="saveProfile">保存</button>
+                        <button id="closeProfile">閉じる</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!--▼footer▼-->
+    <footer>
+        <h3 id="copyright">©2022 MOMOKAWA NIDA</3>
+    </footer>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC7heMCJP3vzU7dmURDo8LdQ24d9ohORFQ",
+            authDomain: "schedule-planning.firebaseapp.com",
+            databaseURL: "https://schedule-planning-default-rtdb.firebaseio.com/",
+            projectId: "schedule-planning",
+            storageBucket: "schedule-planning.appspot.com",
+            messagingSenderId: "545354919287",
+            appId: "1:545354919287:web:5fd6820061928fa9974572"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+    </script>
+
+    <!-- jQueryのコードを書くscriptタグより前でjQueryを読み込む -->
+    <script src="https://code.jquery.com/jquery-3.6.0.js"
+        integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+    <script type="module">
+        // Strictモード
+        "use strict";
+
+        // JavaScriptはここに
+        let storage = localStorage;
+
+        import { getDatabase, ref, update, onValue, push, set, get, child } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+        let database = getDatabase();
+        let myId = storage["myId"];
+        let myDatabase = ref(database, "users/" + myId);
+        let myData;
+        let myName;
+        let myPass;
+        onValue(myDatabase, (snapshot) => {
+            const myData = snapshot.val();
+            let redVal = myData.red_name;
+            let orangeVal = myData.orange_name;
+            let yellowVal = myData.yellow_name;
+            let greenVal = myData.green_name;
+            let blueVal = myData.blue_name;
+            let purpleVal = myData.purple_name;
+            const myName = myData.user_name;
+            const myPass = myData.user_pass;
+            if (redVal) {
+                $("#redName").attr("placeholder", redVal);
+            }
+            if (orangeVal) {
+                $("#orangeName").attr("placeholder", orangeVal);
+            }
+            if (yellowVal) {
+                $("#yellowName").attr("placeholder", yellowVal);
+            }
+            if (greenVal) {
+                $("#greenName").attr("placeholder", greenVal);
+            }
+            if (blueVal) {
+                $("#blueName").attr("placeholder", blueVal);
+            }
+            if (purpleVal) {
+                $("#purpleName").attr("placeholder", purpleVal);
+            }
+            if (myName) {
+                $("#changeName").attr("placeholder", myName);
+            }
+            if (myPass) {
+                $("#changePass").attr("placeholder", myPass);
+            }
+        });
+
+        $("#logOut").on("click", function () {
+            let logout = window.confirm("保存されていない内容は破棄されます。よろしいですか？");
+            if (logout) {
+                storage["myId"] = undefined;
+                storage["myPass"] = undefined;
+                window.location.href = "/index.html";
+            }
+        });
+
+        $("#themeTitle").on("click", function () {
+            $("#changeTheme").css("display", "block");
+        });
+
+        $("#saveTheme").on("click", function () {
+            let data = { my_theme: $('[name="selectTheme"]').val() };
+            update(myDatabase, data);
+            alert("変更内容を保存しました");
+        });
+
+        $("#closeTheme").on("click", function () {
+            $("#changeTheme").css("display", "none");
+        });
+
+        $("#colorTitle").on("click", function () {
+            $("#changePlanColors").css("display", "block");
+        });
+
+        $("#saveColor").on("click", function () {
+            let redName = { red_name: $("#redName").val() };
+            let orangeName = { orange_name: $("#orangeName").val() };
+            let yellowName = { yellow_name: $("#yellowName").val() };
+            let greenName = { green_name: $("#greenName").val() };
+            let blueName = { blue_name: $("#blueName").val() };
+            let purpleName = { purple_name: $("#purpleName").val() };
+            let color = ["red", "orange", "yellow", "green", "blue", "purple"];
+            if ($("#redName").val() !== "") {
+                update(myDatabase, redName);
+                $("#redName").val("");
+            }
+            if ($("#orangeName").val() !== "") {
+                update(myDatabase, orangeName);
+                $("#orangeName").val("");
+
+            }
+            if ($("#yellowName").val() !== "") {
+                update(myDatabase, yellowName);
+                $("#yellowName").val("");
+            }
+            if ($("#greenName").val() !== "") {
+                update(myDatabase, greenName);
+                $("#greenName").val("");
+            }
+            if ($("#blueName").val() !== "") {
+                update(myDatabase, blueName);
+                $("#blueName").val("");
+            }
+            if ($("#purpleName").val() !== "") {
+                update(myDatabase, purpleName);
+                $("#purpleName").val("");
+            }
+            alert("変更内容を保存しました");
+        });
+
+        $("#closeColor").on("click", function () {
+            $("#changePlanColors").css("display", "none");
+        });
+
+        $("#profileTitle").on("click", function () {
+            $("#changeProfile").css("display", "block");
+        });
+
+        $("#saveProfile").on("click", function () {
+            let newName = { user_name: $("#changeName").val() };
+            let newPass = { user_pass: $("#changePass").val() };
+            if ($("#changeName").val() !== "") {
+                update(myDatabase, newName);
+                $("#changeName").val("");
+            }
+            if ($("#changePass").val() !== "") {
+                update(myDatabase, newPass);
+                $("#changePass").val("");
+            }
+            alert("変更内容を保存しました");
+        });
+
+        $("#closeProfile").on("click", function () {
+            $("#changeProfile").css("display", "none");
+        });
+
+    </script>
+
+</body>
+
+</html>

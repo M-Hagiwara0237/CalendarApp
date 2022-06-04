@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>CALENDAR</title>
+    <script>
+        (function (d) {
+            var config = {
+                kitId: 'mrs7nsi',
+                scriptTimeout: 3000,
+                async: true
+            },
+                h = d.documentElement, t = setTimeout(function () { h.className = h.className.replace(/\bwf-loading\b/g, "") + " wf-inactive"; }, config.scriptTimeout), tk = d.createElement("script"), f = false, s = d.getElementsByTagName("script")[0], a; h.className += " wf-loading"; tk.src = 'https://use.typekit.net/' + config.kitId + '.js'; tk.async = true; tk.onload = tk.onreadystatechange = function () { a = this.readyState; if (f || a && a != "complete" && a != "loaded") return; f = true; clearTimeout(t); try { Typekit.load(config) } catch (e) { } }; s.parentNode.insertBefore(tk, s)
+        })(document);
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- HTMLはここに -->
+    <header>
+        <h1 id=title>CALENDAR APP</h1>
+    </header>
+    <main>
+        <div class="signUp">
+            <div class="errorMessage"></div>
+            <div>ユーザーID</div>
+            <input id="newUserId" type="text" placeholder="ユーザーIDを入力してください" />
+            <div>パスワード</div>
+            <input id="newUserPass" type="text" placeholder="パスワードを入力してください" />
+            <div>名前</div>
+            <input id="newUserName" type="text" placeholder="名前を入力してください" />
+            <br>
+            <button id="signUp">登録</button>
+            <h3 id="returnLogIn"><a href="index.html">アカウントをお持ちの方はこちら</a></h3>
+        </div>
+    </main>
+    <footer>
+        <h3 id="copyright">©2022 MOMOKAWA NIDA</h3>
+    </footer>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC7heMCJP3vzU7dmURDo8LdQ24d9ohORFQ",
+            authDomain: "schedule-planning.firebaseapp.com",
+            databaseURL: "https://schedule-planning-default-rtdb.firebaseio.com/",
+            projectId: "schedule-planning",
+            storageBucket: "schedule-planning.appspot.com",
+            messagingSenderId: "545354919287",
+            appId: "1:545354919287:web:5fd6820061928fa9974572"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+    </script>
+
+    <!-- jQueryのコードを書くscriptタグより前でjQueryを読み込む -->
+    <script src="https://code.jquery.com/jquery-3.6.0.js"
+        integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+    <script type="module">
+        // Strictモード
+        "use strict";
+
+        // JavaScriptはここに
+        let storage = localStorage;
+
+        import { getDatabase, ref, update, onValue, push, set, get, child } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+        let database = getDatabase();
+        let userDatabase = ref(database, "users");
+        let data;
+        let userData;
+        let usersId;
+        let usersNum;
+        let myPass;
+        onValue(ref((database), "users/"), (snapshot) => {
+            const data = snapshot.val();
+                usersId = Object.keys(data);
+                usersNum = usersId.length;
+                console.log(usersId);
+        });
+        $("#signUp").on("click", function () {
+            let newUserId = $("#newUserId").val();
+            let newUserPass = $("#newUserPass").val();
+            let newUserName = $("#newUserName").val();
+            if (newUserId === "") {
+                $(".errorMessage").css("display", "block");
+                $(".errorMessage").html('<h3 id="erroeMessage">ユーザーIDを入力してください</h3>\n<button id="delete">OK</button>');
+            }
+            else if (newUserPass === "") {
+                $(".errorMessage").css("display", "block");
+                $(".errorMessage").html('<h3 id="erroeMessage">パスワードを入力してください</h3>\n<button id="delete">OK</button>');
+            } else if (newUserName === "") {
+                $(".errorMessage").css("display", "block");
+                $(".errorMessage").html('<h3 id="erroeMessage">名前を入力してください</h3>\n<button id="delete">OK</button>');
+            } else {
+                for (let i = 0; i < usersNum; i++) {
+                    if (newUserId != usersId[i] && i < usersNum - 1) {
+                        console.log(i);
+                    } else if (newUserId != usersId[i] && i == usersNum - 1) {
+                        storage[$("#newUserId").val()] = $("#newUserPass").val();
+                        let data = {};
+                        data[newUserId] = {
+                            user_pass: newUserPass,
+                            user_name: newUserName,
+                            red_name: "RED",
+                            orange_name: "ORANGE",
+                            yellow_name: "YELLOW",
+                            green_name: "GREEN",
+                            blue_name: "BLUE",
+                            purple_name: "PURPLE"
+                        };
+                        update(userDatabase, data);
+                        $(".errorMessage").css("display", "block");
+                        $(".errorMessage").html('<h3 id="erroeMessage">新規登録が完了しました</h3>\n<button id="returnIndex">OK</button>');
+                        break;
+                    } else if (newUserId == usersId[i]) {
+                        $(".errorMessage").css("display", "block");
+                        $(".errorMessage").html('<h3 id="erroeMessage">このユーザーIDはすでに使用されています</h3>\n<button id="delete">OK</button>');
+                        break;
+                    }
+                }
+            }
+        });
+
+        $(document).on("click", "#delete", function () {
+            $(".errorMessage").css("display", "none");
+        });
+
+        $(document).on("click", "#returnIndex", function () {
+            location.href = "/index.html";
+        });
+
+
+    </script>
+
+</body>
+
+</html>
